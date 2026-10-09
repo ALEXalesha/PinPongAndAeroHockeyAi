@@ -78,6 +78,17 @@ def test_elastic_mallet_hit_keeps_speed(sp, offset):
     assert abs(np.linalg.norm(h.pv[0]) - sp) < 1e-9
 
 
+def test_mallet_top_speed_is_v_max():
+    """Полный газ полсекунды: бита разгоняется ровно до v_max и не быстрее."""
+    h = Hockey(1, first=1)
+    top = 0.0
+    for _ in range(120):
+        h.step(np.array([[[1.0, 0.0], [0.0, 0.0]]]))
+        if h.mal[0, 0, 0] < mallet_box()[0, 1]:
+            top = max(top, np.linalg.norm(h.mv[0, 0]))
+    assert abs(top - P.v_max) < 1e-9
+
+
 def test_damping_slows_puck():
     h = solo(puck=[1.0, 0.5], pv=[0.5, 0.0])
     for _ in range(240):
@@ -151,7 +162,8 @@ def test_goal_scores_and_puck_goes_to_conceder():
 
 
 def test_post_bounces_puck_back():
-    h = solo(puck=[0.3, P.goal_lo], pv=[-4.0, 0.0], mal=[[0.1, 0.9], [1.9, 0.1]])
+    """Шайба задевает штангу краем (центр уже напротив ворот) - отскакивает, гола нет."""
+    h = solo(puck=[0.3, P.goal_lo + 0.02], pv=[-4.0, 0.0], mal=[[0.1, 0.9], [1.9, 0.1]])
     for _ in range(60):
         h.step(ZERO)
     assert h.score[0].tolist() == [0, 0] and h.pv[0, 0] > 0
@@ -175,3 +187,18 @@ def test_match_ends_at_seven():
     frozen = h.snapshot()
     h.step(np.ones((1, 2, 2)))
     assert np.array_equal(h.snapshot()["puck"], frozen["puck"])
+
+
+def test_moving_mallet_hits_harder():
+    """Бита, идущая навстречу, отправляет шайбу быстрее, чем стоящая: скорость поверхности
+    входит в удар (в системе биты скорость сохраняется с упругостью e)."""
+    def after_hit(mv):
+        h = solo(replace(P, damping=0.0), puck=[0.7, 0.5], pv=[0.0, 0.0], mal=[[0.55, 0.5], [1.8, 0.5]],
+                 mv=[[mv, 0.0], [0.0, 0.0]])
+        for _ in range(60):
+            h.step(np.array([[[1.0 if mv else 0.0, 0.0], [0.0, 0.0]]]))
+            if h.hit[0, 0]:
+                return h.pv[0, 0], h.mv[0, 0, 0]
+        raise AssertionError("нет удара")
+    v, vm = after_hit(3.0)
+    assert abs(v - (1 + P.e_mallet) * vm) < 0.05

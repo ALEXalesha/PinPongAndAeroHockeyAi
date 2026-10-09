@@ -37,7 +37,8 @@ def toi_point(d, w, radius, tmax):
     """Когда круг (центр p, скорость w относительно точки c) коснётся точки c на расстоянии
     radius. d = p - c. Только сближение. Возвращает t в [0, tmax] или INF.
 
-    Уже внутри и сближаемся - t = 0: такой случай чинится отскоком сразу, а не пролётом."""
+    Уже внутри и сближаемся - меньший корень отрицательный, и t = 0: такой случай чинится
+    отскоком сразу, а не пролётом."""
     a = dot(w, w)
     b = dot(d, w)
     c = dot(d, d) - radius * radius
@@ -45,7 +46,6 @@ def toi_point(d, w, radius, tmax):
     approaching = b < 0
     root = (-b - np.sqrt(np.maximum(disc, 0.0))) / np.where(a > 1e-300, a, 1.0)
     t = np.where(approaching & (disc >= 0) & (a > 1e-300), root, INF)
-    t = np.where(approaching & (c <= 0), 0.0, t)
     return np.where(t <= tmax, np.maximum(t, 0.0), INF)
 
 

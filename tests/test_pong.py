@@ -215,3 +215,17 @@ def test_toss_goes_up_after_hold():
     assert g.phase[0] == SERVE and g.ball[0, 0] > P.L
     run(g, int(P.hold / TICK) + 3)
     assert g.phase[0] == PLAY and g.bv[0, 1] > 0
+
+
+def test_moving_paddle_adds_speed():
+    """Ракетка, идущая вперёд, отправляет мяч быстрее, чем стоящая."""
+    def after(pv):
+        c = np.array([-0.3, 0.4])
+        g = solo(STILL_AIR, ball=[-0.2, 0.4], bv=[-2.0, 0.0], pc=[c, FAR[1]], pv=[[pv, 0.0], [0.0, 0.0]],
+                 last_hitter=1, bounced=0)
+        for _ in range(60):
+            g.step(np.array([[[1.0 if pv else 0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]]))
+            if g.hit[0, 0]:
+                return g.bv[0, 0]
+        raise AssertionError("нет удара")
+    assert after(4.0) > after(0.0) + 4.0
