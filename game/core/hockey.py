@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from game.core.geom import clip_norm, contact, norm, toi_point, toi_segment
+from game.core.geom import INF, clip_norm, contact, norm, toi_point
 
 TICK = 1.0 / 240.0
 
@@ -39,6 +39,7 @@ class Params:
 
 
 P = Params()
+WALL_NORMALS = np.broadcast_to(np.array([[0.0, 1.0], [0.0, -1.0], [1.0, 0.0], [-1.0, 0.0]]), (1, 4, 2))
 
 
 def walls(p=P):
@@ -117,6 +118,23 @@ class Hockey:
         self.mal = clamped
         return m0, clamped, (clamped - m0) / TICK
 
+    def wall_toi(self, pos, vel, tau):
+        """Борта поля - прямые вдоль осей, поэтому время удара считается прямо: (k, 4) -
+        нижний, верхний, левый, правый. Левый и правый борт - только вне ворот: если в
+        момент удара центр шайбы напротив ворот, удара нет (концы бортов - штанги)."""
+        p = self.p
+        x, y, vx, vy = pos[:, 0], pos[:, 1], vel[:, 0], vel[:, 1]
+        with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+            t = np.stack([np.where(vy < 0, np.maximum(y - p.r, 0.0) / -vy, INF),
+                          np.where(vy > 0, np.maximum(p.Y - p.r - y, 0.0) / vy, INF),
+                          np.where(vx < 0, np.maximum(x - p.r, 0.0) / -vx, INF),
+                          np.where(vx > 0, np.maximum(p.X - p.r - x, 0.0) / vx, INF)], axis=1)
+            yy = y[:, None] + vy[:, None] * np.where(np.isfinite(t), t, 0.0)
+        mouth = (yy[:, 2:] > p.goal_lo) & (yy[:, 2:] < p.goal_hi)
+        t[:, 2:] = np.where(mouth, INF, t[:, 2:])
+        t = np.where(t <= tau[:, None], t, INF)
+        return t, WALL_NORMALS
+
     # --- шаг ---
 
     def step(self, cmd):
@@ -131,55 +149,57 @@ class Hockey:
         pos = self.puck.copy()
         vel = self.pv * np.exp(-p.damping * TICK)
         vel = np.where(live[:, None], vel, 0.0)
-        tau = np.where(live, TICK, 0.0)
-        s = np.zeros(self.n)                          # прошедшее время внутри шага
+        rows = np.nonzero(live)[0]
+        tau = np.full(len(rows), TICK)
+        s = np.zeros(len(rows))                       # прошедшее время внутри шага
         for _ in range(p.substeps):
-            if not (tau > 0).any():
+            if len(rows) == 0:
                 break
-            # борта: (n, 6)
-            tw, nw = toi_segment(pos[:, None, :], vel[:, None, :], self.segs[None, :, 0], self.segs[None, :, 1],
-                                 p.r, tau[:, None])
-            # штанги: (n, 4)
-            dp = pos[:, None, :] - self.posts[None]
-            tp = toi_point(dp, vel[:, None, :], p.r, tau[:, None])
-            # биты: (n, 2), положение биты в момент s внутри шага
-            mk = m0 + vm * s[:, None, None]
-            dm = pos[:, None, :] - mk
-            wm = vel[:, None, :] - vm
-            tm = toi_point(dm, wm, p.r + p.R, tau[:, None])
+            # после первого прохода считаются только партии, где удар был: в остальных
+            # шайба уже долетела до конца шага
+            pr, vr = pos[rows], vel[rows]
+            m0r, vmr = m0[rows], vm[rows]
+            tw, nw = self.wall_toi(pr, vr, tau)                             # (k, 4)
+            tp = toi_point(pr[:, None, :] - self.posts[None], vr[:, None, :], p.r, tau[:, None])
+            mk = m0r + vmr * s[:, None, None]
+            tm = toi_point(pr[:, None, :] - mk, vr[:, None, :] - vmr, p.r + p.R, tau[:, None])
             allt = np.concatenate([tw, tp, tm], axis=1)
             which = allt.argmin(axis=1)
-            tmin = allt[np.arange(self.n), which]
-            hit = np.isfinite(tmin) & (tau > 0)
+            k = np.arange(len(rows))
+            tmin = allt[k, which]
+            hit = np.isfinite(tmin)
             adv = np.where(hit, tmin, tau)
-            pos = pos + vel * adv[:, None]
+            pr = pr + vr * adv[:, None]
             s = s + adv
-            tau = np.where(hit, tau - adv, 0.0)
+            tau = tau - adv
+            pos[rows] = pr
             if not hit.any():
                 break
-            idx = np.nonzero(hit)[0]
-            w = which[idx]
-            nrm = np.zeros((len(idx), 2))
-            surf = np.zeros((len(idx), 2))
-            e = np.full(len(idx), p.e_wall)
-            kw = w < 6
-            nrm[kw] = nw[idx[kw], w[kw]]
-            kp = (w >= 6) & (w < 10)
+            h = np.nonzero(hit)[0]
+            w = which[h]
+            nrm = np.zeros((len(h), 2))
+            surf = np.zeros((len(h), 2))
+            e = np.full(len(h), p.e_wall)
+            kw = w < 4
+            nrm[kw] = WALL_NORMALS[0, w[kw]]
+            kp = (w >= 4) & (w < 8)
             if kp.any():
-                d = pos[idx[kp]] - self.posts[w[kp] - 6]
+                d = pr[h[kp]] - self.posts[w[kp] - 4]
                 nrm[kp] = d / norm(d)[:, None]
-            km = w >= 10
+            km = w >= 8
             if km.any():
-                side = w[km] - 10
-                mpos = m0[idx[km], side] + vm[idx[km], side] * s[idx[km], None]
-                d = pos[idx[km]] - mpos
+                side = w[km] - 8
+                hm = h[km]
+                mpos = m0r[hm, side] + vmr[hm, side] * s[hm, None]
+                d = pr[hm] - mpos
                 nrm[km] = d / np.maximum(norm(d), 1e-12)[:, None]
-                surf[km] = vm[idx[km], side]
+                surf[km] = vmr[hm, side]
                 e[km] = p.e_mallet
-                self.hit[idx[km], side] = True
-            self.wall[idx[~km]] = True
-            v_new, _ = contact(vel[idx], np.zeros(len(idx)), nrm, surf, e, 0.0, 2.0 / 3.0, p.r)
-            vel[idx] = v_new
+                self.hit[rows[hm], side] = True
+            self.wall[rows[h[~km]]] = True
+            v_new, _ = contact(vr[h], np.zeros(len(h)), nrm, surf, e, 0.0, 2.0 / 3.0, p.r)
+            vel[rows[h]] = v_new
+            rows, tau, s = rows[h], tau[h], s[h]
         # Страховка на редкий случай, когда ударов за шаг больше substeps (шайба зажата
         # битой у борта): вытолкнуть из бит и вернуть в поле. Скорость не трогается.
         for side in (0, 1):
@@ -214,10 +234,13 @@ class Hockey:
                 self.score[m, side] += 1
                 self._serve(m, 1 - side)
         stalled = live & (scorer < 0) & (self.stall_t >= p.stall)
-        for side in (0, 1):
-            m = stalled & (self.half == side)
-            if m.any():
-                self._serve(m, 1 - side, reset_mallets=False)
+        if stalled.any():
+            # маски - до переноса: _serve меняет half, и вторая сторона не должна увидеть
+            # шайбу, только что переданную ей
+            masks = [stalled & (self.half == side) for side in (0, 1)]
+            for side, m in enumerate(masks):
+                if m.any():
+                    self._serve(m, 1 - side, reset_mallets=False)
         won = live & (self.score.max(axis=1) >= p.to_win)
         if won.any():
             self.over |= won

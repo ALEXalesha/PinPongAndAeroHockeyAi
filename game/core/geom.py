@@ -49,6 +49,22 @@ def toi_point(d, w, radius, tmax):
     return np.where(t <= tmax, np.maximum(t, 0.0), INF)
 
 
+class Segments:
+    """Неподвижные отрезки (k, 2, 2): направление, нормаль и длина считаются один раз."""
+
+    def __init__(self, segs):
+        segs = np.asarray(segs, dtype=float)
+        self.A = segs[..., 0, :]
+        e = segs[..., 1, :] - self.A
+        self.length = norm(e)
+        self.u = e / self.length[..., None]
+        self.nn = perp(self.u)
+
+    def toi(self, p, w, radius, tmax):
+        """p, w - (n, 2); ответ (t, нормаль) - (n, k) и (n, k, 2)."""
+        return _toi_seg(p[:, None, :], w[:, None, :], self.A, self.u, self.nn, self.length, radius, tmax[:, None])
+
+
 def toi_segment(p, w, A, B, radius, tmax):
     """Когда круг радиуса radius (центр p, скорость w относительно отрезка) коснётся
     отрезка AB боком. Концы отрезка - отдельно, через toi_point. Отрезок двусторонний.
@@ -57,18 +73,21 @@ def toi_segment(p, w, A, B, radius, tmax):
     e = B - A
     length = norm(e)
     u = e / length[..., None]
-    nn = perp(u)
-    s = dot(p - A, nn)
-    ds = dot(w, nn)
+    return _toi_seg(p, w, A, u, perp(u), length, radius, tmax)
+
+
+def _toi_seg(p, w, A, u, nn, length, radius, tmax):
+    d = p - A
+    s = d[..., 0] * nn[..., 0] + d[..., 1] * nn[..., 1]
+    ds = w[..., 0] * nn[..., 0] + w[..., 1] * nn[..., 1]
     side = np.where(s > 0, 1.0, np.where(s < 0, -1.0, -np.sign(ds)))
     dist = np.abs(s)
     rate = -ds * side                       # > 0 - сближаемся
-    t = np.where(rate > 0, (dist - radius) / np.where(rate > 0, rate, 1.0), INF)
-    t = np.where((rate > 0) & (dist <= radius), 0.0, t)
-    t = np.where(t < 0, 0.0, t)
-    q = dot(p + w * np.where(np.isfinite(t), t, 0.0)[..., None] - A, u)
-    inside = (q >= 0) & (q <= length)
-    t = np.where(inside & (t <= tmax), t, INF)
+    ok = rate > 0
+    t = np.where(ok, np.maximum(dist - radius, 0.0) / np.where(ok, rate, 1.0), INF)
+    tt = np.where(ok, t, 0.0)
+    q = (d[..., 0] + w[..., 0] * tt) * u[..., 0] + (d[..., 1] + w[..., 1] * tt) * u[..., 1]
+    t = np.where((q >= 0) & (q <= length) & (t <= tmax), t, INF)
     return t, nn * side[..., None]
 
 
