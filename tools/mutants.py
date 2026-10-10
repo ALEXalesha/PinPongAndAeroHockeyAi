@@ -53,3 +53,22 @@ MUTANTS = [
     ("control: мышь без торможения", C, "speed = np.minimum(v_max, np.sqrt(2.0 * a_max * gain * dist))",
      "speed = v_max + 0.0 * dist", TC),
 ]
+O = "game/ai/observe.py"
+A = "game/ai/agents.py"
+PR = "game/ai/predict.py"
+TA = "tests/test_ai.py"
+MUTANTS += [
+    ("ai: глаза без задержки", O, "idx = (self.pos - d) % (MAX_DELAY + 1)", "idx = self.pos % (MAX_DELAY + 1)", TA),
+    ("ai: видно вращение", O, "return np.concatenate([w.ball, w.bv, w.pc.reshape(w.n, 4), w.th,",
+     "return np.concatenate([w.ball, w.bv + 0.01 * w.spin[:, None], w.pc.reshape(w.n, 4), w.th,", TA),
+    ("ai: мяч из мира, а не из глаз", A, "bx = view[:, 0] if side == 0 else p.L - view[:, 0]",
+     "bx = w.ball[rows, 0] if side == 0 else p.L - w.ball[rows, 0]", TA),
+    ("ai: шайба из мира, а не из глаз", A, "px = view[:, 0] if side == 0 else p.X - view[:, 0]",
+     "px = w.puck[rows, 0] if side == 0 else p.X - w.puck[rows, 0]", TA),
+    ("ai: прогноз без отражений", PR, "return np.where(m > span, 2 * span - m, m) + lo", "return m + lo", TA),
+    ("ai: прогноз мяча без вращения от стола", PR,
+     "g = g - np.where(bounced_mine, 0.0, p.magnus * spin1 * bvx)", "g = g", TA),
+    ("ai: шум одинаковый у всех партий", A, "x = ids[:, None].astype(np.float64) * 12.9898",
+     "x = 0.0 * ids[:, None] + 12.9898", TA),
+    ("ai: подача без наклона", A, "tilt = np.where(v[\"serving\"], self.serve_tilt, tilt)", "tilt = tilt", TA),
+]
