@@ -122,7 +122,8 @@ def evaluate(game, params, cfg, league, rng, hint=True):
     score = raw + cfg["hit_bonus"] * np.minimum(hits, 20) + cfg["good_bonus"] * np.minimum(good, 20)
     fit = score.reshape(P, G).mean(axis=1)
     kinds_all = np.array([SCHEDULE[s % len(SCHEDULE)] for s in slot])
-    summary = {k: float(raw[kinds_all == k].mean()) for k in ("predictor", "follower", "league")}
+    summary = {k: float(raw[kinds_all == k].mean()) for k in ("predictor", "follower", "league")
+               if (kinds_all == k).any()}
     summary["hits"] = float(hits.mean())
     if game == "pong":
         summary["good"] = float(good.mean())

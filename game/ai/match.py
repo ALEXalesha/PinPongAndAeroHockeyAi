@@ -22,7 +22,7 @@ LEVEL_NAMES = tuple(LEVELS)
 BOT_DELAY = 30                                   # 0.125 с
 BOT_NOISE = 0.004                                # чуть-чуть: иначе все партии ботов одинаковые
 PERIOD = 4                                       # решение 60 раз в секунду
-MAX_SECONDS = {"hockey": 300.0, "pong": 600.0}
+MAX_SECONDS = {"hockey": 600.0, "pong": 900.0}
 MODELS = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models")
 
 
