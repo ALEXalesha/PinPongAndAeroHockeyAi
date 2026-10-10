@@ -57,9 +57,9 @@ def run(args):
     else:
         cfg = dict(DEFAULTS[args.game])
         st = State(args.game, cfg, args.seed, not args.nohint)
-        from game.train.imitate import collect, fit
+        from game.train.imitate import COLLECT_SECONDS, collect, fit
         t0 = time.time()
-        X, Y = collect(args.game, n=64, seconds=8.0 if args.probe else 40.0, seed=args.seed, hint=st.hint)
+        X, Y = collect(args.game, seconds=8.0 if args.probe else COLLECT_SECONDS, seed=args.seed, hint=st.hint)
         log(f"подражание: {len(X)} примеров собрано за {time.time() - t0:.0f} с")
         st.mean = fit(args.game, X, Y, st.cfg["hidden"], epochs=6 if args.probe else 40, seed=args.seed, log=log)
         st.league = [st.mean.copy()]

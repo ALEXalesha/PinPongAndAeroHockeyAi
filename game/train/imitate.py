@@ -15,7 +15,12 @@ from game.ai.agents import Pilot, Predictor, hockey_vec, make_eyes, pong_vec, se
 from game.ai.match import BOT_DELAY, BOT_NOISE, LEVELS, PERIOD, TICKS, new_world
 
 
-def collect(game, n=64, seconds=30.0, seed=0, hint=True):
+COLLECT_GAMES = 64
+COLLECT_SECONDS = 40.0
+EXAMPLES = int(COLLECT_GAMES * COLLECT_SECONDS * TICKS / PERIOD)      # 153 600 решений бота
+
+
+def collect(game, n=COLLECT_GAMES, seconds=COLLECT_SECONDS, seed=0, hint=True):
     """Признаки и команды бота: (X, Y). Бот играет за обе стороны с разными задержками."""
     rng = np.random.default_rng(seed)
     w = new_world(game, n, seed=seed, first=rng.integers(0, 2, n))

@@ -11,6 +11,7 @@ import numpy as np
 
 from aikit.trainlog import load_snapshot
 from game.ai.match import model_path
+from game.train.imitate import EXAMPLES
 
 
 def pick(snapshots, frac):
@@ -26,7 +27,8 @@ def export(game, run, nohint_run=None, out=None):
     weights = {k: snaps[g] for k, g in choice.items()}
     weights["strong"] = arrays["mean"]
     info = {"hidden": meta["cfg"]["hidden"], "gens": meta["gen"], "seconds": meta["seconds"],
-            "games": meta["games_played"], "imitation": meta.get("imitation", 0),
+            # первые обучения не записывали число примеров в снимок; сбор был всегда один
+            "games": meta["games_played"], "imitation": meta.get("imitation") or EXAMPLES,
             "levels_from": {**{k: int(g) for k, g in choice.items()}, "strong": int(meta["gen"])},
             "cfg": meta["cfg"]}
     if nohint_run:

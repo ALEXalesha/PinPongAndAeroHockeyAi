@@ -1,0 +1,444 @@
+{
+ "game": "hockey",
+ "network": {
+  "features": 16,
+  "hidden": [
+   16,
+   16
+  ],
+  "outputs": 2,
+  "parameters": 578
+ },
+ "training": {
+  "hidden": [
+   16,
+   16
+  ],
+  "gens": 120,
+  "seconds": 1358.0929310321808,
+  "games": 30720,
+  "imitation": 153600,
+  "levels_from": {
+   "novice": 10,
+   "medium": 60,
+   "strong": 120
+  },
+  "cfg": {
+   "pop": 32,
+   "games": 8,
+   "seconds": 12.0,
+   "gens": 120,
+   "hidden": [
+    16,
+    16
+   ],
+   "sigma": 0.08,
+   "hit_bonus": 0.05,
+   "good_bonus": 0.0
+  },
+  "nohint": {
+   "gens": 120,
+   "seconds": 1902.2023141384125,
+   "games": 30720
+  }
+ },
+ "games_per_check": 200,
+ "checks": [
+  {
+   "subject": "strong",
+   "opponent": "follower",
+   "games": 200,
+   "seed": 1000,
+   "wins": 200,
+   "draws": 0,
+   "losses": 0,
+   "win_rate": 1.0,
+   "points_for": 7.0,
+   "points_against": 1.18,
+   "finished": 200,
+   "sample": [
+    [
+     "W",
+     7,
+     2
+    ],
+    [
+     "W",
+     7,
+     1
+    ],
+    [
+     "W",
+     7,
+     2
+    ],
+    [
+     "W",
+     7,
+     0
+    ]
+   ],
+   "seconds": 58.1
+  },
+  {
+   "subject": "strong",
+   "opponent": "predictor",
+   "games": 200,
+   "seed": 1001,
+   "wins": 102,
+   "draws": 1,
+   "losses": 97,
+   "win_rate": 0.51,
+   "points_for": 5.585,
+   "points_against": 5.405,
+   "finished": 199,
+   "sample": [
+    [
+     "L",
+     5,
+     7
+    ],
+    [
+     "W",
+     7,
+     2
+    ],
+    [
+     "W",
+     7,
+     4
+    ],
+    [
+     "W",
+     7,
+     2
+    ]
+   ],
+   "seconds": 297.0
+  },
+  {
+   "subject": "strong",
+   "opponent": "medium",
+   "games": 200,
+   "seed": 1002,
+   "wins": 198,
+   "draws": 0,
+   "losses": 2,
+   "win_rate": 0.99,
+   "points_for": 6.98,
+   "points_against": 2.31,
+   "finished": 199,
+   "sample": [
+    [
+     "W",
+     7,
+     1
+    ],
+    [
+     "W",
+     7,
+     3
+    ],
+    [
+     "W",
+     7,
+     2
+    ],
+    [
+     "W",
+     7,
+     2
+    ]
+   ],
+   "seconds": 286.6
+  },
+  {
+   "subject": "strong",
+   "opponent": "novice",
+   "games": 200,
+   "seed": 1003,
+   "wins": 200,
+   "draws": 0,
+   "losses": 0,
+   "win_rate": 1.0,
+   "points_for": 7.0,
+   "points_against": 1.32,
+   "finished": 200,
+   "sample": [
+    [
+     "W",
+     7,
+     3
+    ],
+    [
+     "W",
+     7,
+     2
+    ],
+    [
+     "W",
+     7,
+     1
+    ],
+    [
+     "W",
+     7,
+     2
+    ]
+   ],
+   "seconds": 129.0
+  },
+  {
+   "subject": "medium",
+   "opponent": "follower",
+   "games": 200,
+   "seed": 1004,
+   "wins": 197,
+   "draws": 0,
+   "losses": 3,
+   "win_rate": 0.985,
+   "points_for": 6.95,
+   "points_against": 2.61,
+   "finished": 200,
+   "sample": [
+    [
+     "W",
+     7,
+     2
+    ],
+    [
+     "W",
+     7,
+     2
+    ],
+    [
+     "W",
+     7,
+     3
+    ],
+    [
+     "W",
+     7,
+     5
+    ]
+   ],
+   "seconds": 63.4
+  },
+  {
+   "subject": "medium",
+   "opponent": "predictor",
+   "games": 200,
+   "seed": 1005,
+   "wins": 18,
+   "draws": 0,
+   "losses": 182,
+   "win_rate": 0.09,
+   "points_for": 3.02,
+   "points_against": 6.79,
+   "finished": 200,
+   "sample": [
+    [
+     "W",
+     7,
+     6
+    ],
+    [
+     "L",
+     4,
+     7
+    ],
+    [
+     "L",
+     2,
+     7
+    ],
+    [
+     "L",
+     0,
+     7
+    ]
+   ],
+   "seconds": 162.1
+  },
+  {
+   "subject": "novice",
+   "opponent": "follower",
+   "games": 200,
+   "seed": 1006,
+   "wins": 130,
+   "draws": 0,
+   "losses": 70,
+   "win_rate": 0.65,
+   "points_for": 5.96,
+   "points_against": 4.93,
+   "finished": 200,
+   "sample": [
+    [
+     "W",
+     7,
+     3
+    ],
+    [
+     "L",
+     4,
+     7
+    ],
+    [
+     "L",
+     2,
+     7
+    ],
+    [
+     "W",
+     7,
+     2
+    ]
+   ],
+   "seconds": 52.6
+  },
+  {
+   "subject": "novice",
+   "opponent": "predictor",
+   "games": 200,
+   "seed": 1007,
+   "wins": 4,
+   "draws": 0,
+   "losses": 196,
+   "win_rate": 0.02,
+   "points_for": 1.68,
+   "points_against": 6.975,
+   "finished": 200,
+   "sample": [
+    [
+     "L",
+     2,
+     7
+    ],
+    [
+     "L",
+     2,
+     7
+    ],
+    [
+     "L",
+     1,
+     7
+    ],
+    [
+     "L",
+     4,
+     7
+    ]
+   ],
+   "seconds": 124.6
+  },
+  {
+   "subject": "nohint",
+   "opponent": "follower",
+   "games": 200,
+   "seed": 1008,
+   "wins": 168,
+   "draws": 0,
+   "losses": 32,
+   "win_rate": 0.84,
+   "points_for": 6.66,
+   "points_against": 4.44,
+   "finished": 200,
+   "sample": [
+    [
+     "W",
+     7,
+     2
+    ],
+    [
+     "L",
+     6,
+     7
+    ],
+    [
+     "W",
+     7,
+     4
+    ],
+    [
+     "W",
+     7,
+     3
+    ]
+   ],
+   "seconds": 24.0
+  },
+  {
+   "subject": "nohint",
+   "opponent": "predictor",
+   "games": 200,
+   "seed": 1009,
+   "wins": 0,
+   "draws": 0,
+   "losses": 200,
+   "win_rate": 0.0,
+   "points_for": 1.485,
+   "points_against": 7.0,
+   "finished": 200,
+   "sample": [
+    [
+     "L",
+     2,
+     7
+    ],
+    [
+     "L",
+     1,
+     7
+    ],
+    [
+     "L",
+     3,
+     7
+    ],
+    [
+     "L",
+     0,
+     7
+    ]
+   ],
+   "seconds": 56.8
+  },
+  {
+   "subject": "strong",
+   "opponent": "nohint",
+   "games": 200,
+   "seed": 1010,
+   "wins": 200,
+   "draws": 0,
+   "losses": 0,
+   "win_rate": 1.0,
+   "points_for": 7.0,
+   "points_against": 1.685,
+   "finished": 200,
+   "sample": [
+    [
+     "W",
+     7,
+     2
+    ],
+    [
+     "W",
+     7,
+     3
+    ],
+    [
+     "W",
+     7,
+     2
+    ],
+    [
+     "W",
+     7,
+     1
+    ]
+   ],
+   "seconds": 39.1
+  }
+ ]
+}
