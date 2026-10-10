@@ -11,7 +11,8 @@
 
 Правила (упрощены, см. docs/spec.md, «решения»):
 - подача: мяч подброшен у своего края стола, подающий бьёт, мяч должен упасть на сторону
-  соперника (без отскока на своей стороне - упрощение);
+  соперника. Простая подача - сразу на сторону соперника; строгая (strict[side] = True) -
+  как по правилам: сначала отскок на своей стороне, потом на стороне соперника;
 - после удара мяч должен один раз отскочить на стороне соперника, потом соперник бьёт;
 - ошибка: свой стол, мимо стола, удар до отскока, второй отскок у принимающего - его ошибка;
 - подача меняется каждые 2 очка, с 10:10 - каждое очко; партия до 11 с разницей в 2.
@@ -120,6 +121,9 @@ class Pong:
         self.last_hitter = np.full(n, -1)
         self.bounced = np.full(n, -1)          # сторона отскока после последнего удара
         self.hit_t = np.zeros(n)               # время с последнего удара
+        self.stroke = np.zeros(n, dtype=np.int64)   # ударов в розыгрыше (1 - летит подача)
+        self.serve_own = np.zeros(n, dtype=bool)    # строгая подача уже отскочила на своей
+        self.strict = np.zeros((n, 2), dtype=bool)  # строгая подача у стороны
         self.ticks = 0
         self._events()
         self._hold(np.ones(n, dtype=bool))
@@ -145,6 +149,8 @@ class Pong:
         self.phase_t[m] = 0.0
         self.last_hitter[m] = -1
         self.bounced[m] = -1
+        self.stroke[m] = 0
+        self.serve_own[m] = False
 
     # --- ракетки ---
 
@@ -315,6 +321,7 @@ class Pong:
         self.last_hitter[g[ok]] = side[ok]
         self.bounced[g[ok]] = -1
         self.hit_t[g[ok]] = 0.0
+        self.stroke[g[ok]] += 1
 
     def _on_bounce(self, g, side):
         live = self.phase[g] == PLAY
@@ -326,13 +333,20 @@ class Pong:
         toss = last == -1
         if toss.any():
             self._fault(g[toss], self.server[g[toss]])
-        own = (last >= 0) & (side == last)
+        # строгая подача: первый отскок - на своей стороне, второй - у соперника
+        strict = (last >= 0) & (self.stroke[g] == 1) & self.strict[g, np.maximum(last, 0)]
+        own_ok = strict & (side == last) & ~self.serve_own[g]
+        skipped = strict & (side != last) & ~self.serve_own[g]
+        self.serve_own[g[own_ok]] = True
+        if skipped.any():
+            self._fault(g[skipped], last[skipped])
+        own = (last >= 0) & (side == last) & ~own_ok
         if own.any():
             self._fault(g[own], last[own])
-        second = (last >= 0) & (side != last) & (self.bounced[g] == side)
+        second = (last >= 0) & (side != last) & (self.bounced[g] == side) & ~skipped
         if second.any():
             self._fault(g[second], side[second])
-        first = (last >= 0) & (side != last) & (self.bounced[g] != side)
+        first = (last >= 0) & (side != last) & (self.bounced[g] != side) & ~skipped
         self.bounced[g[first]] = side[first]
         self.good[g[first]] = last[first]
 

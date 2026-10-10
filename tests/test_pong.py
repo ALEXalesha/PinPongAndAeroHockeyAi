@@ -231,3 +231,29 @@ def test_moving_paddle_adds_speed():
                 return g.bv[0, 0]
         raise AssertionError("нет удара")
     assert after(4.0) > after(0.0) + 4.0
+
+
+def serve_from(strict, bv):
+    """Подача стороны 0 с руки: мяч только что отбит подающим."""
+    g = solo(ball=[-0.1, 0.25], bv=bv, last_hitter=0, bounced=-1)
+    g.stroke[0] = 1
+    g.strict[0, 0] = strict
+    run(g, 480, until=lambda g: g.point[0] >= 0 or g.good[0] >= 0)
+    return g
+
+
+def test_simple_serve_lands_on_receiver_side():
+    g = serve_from(False, [6.0, 1.5])
+    assert g.good[0] == 0 and g.point[0] == -1
+
+
+def test_strict_serve_needs_own_bounce_first():
+    """Строгая подача прямо на сторону соперника - ошибка подающего."""
+    g = serve_from(True, [6.0, 1.5])
+    assert g.point[0] == 1 and g.fault[0] == 0
+
+
+def test_strict_serve_with_own_bounce_is_good():
+    g = serve_from(True, [5.0, -0.3])
+    assert g.serve_own[0]
+    assert g.good[0] == 0 and g.point[0] == -1

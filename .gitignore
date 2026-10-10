@@ -11,3 +11,4 @@ dist/
 selftest*.txt
 *.tmp
 runs/
+runs-*.out
