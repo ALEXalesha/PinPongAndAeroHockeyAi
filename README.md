@@ -4,6 +4,9 @@ Version 0.1.0. Russian version with more detail: [README.ru.md](README.ru.md).
 
 ![Ping-pong, AI vs AI with AI thoughts on](docs/preview_pong.png)
 
+[![Built with Claude Code](https://img.shields.io/badge/Built_with-Claude_Code-D97757?logo=claude&logoColor=white)](https://claude.com/claude-code)
+Code, tests and docs are written by Claude (Anthropic) in Claude Code. Ideas, testing and decisions - Alexey.
+
 Two games in one program: ping-pong seen from the side and air hockey seen from above. The
 opponent is a small neural network that first learned to copy a bot and then improved by
 playing against itself and its past versions. It is honest: its paddle has the same speed
